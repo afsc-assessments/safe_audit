@@ -62,6 +62,41 @@ has_document_extension <- function(url) {
   str_detect(url %||% "", regex("\\.(pdf|doc|docx|xls|xlsx|zip)(?:$|[?#])", TRUE))
 }
 
+detect_goa_marker <- function(x) {
+  str_detect(
+    x %||% "",
+    regex("\\bGOA\\b|Gulf of Alaska|(^|[/_ -])GOA(?=[A-Za-z])", TRUE)
+  )
+}
+
+detect_bsai_marker <- function(x) {
+  str_detect(
+    x %||% "",
+    regex("\\bBSAI\\b|Bering Sea and Aleutian Islands|(^|[/_ -])BSAI(?=[A-Za-z])", TRUE)
+  )
+}
+
+detect_ebs_marker <- function(x) {
+  str_detect(
+    x %||% "",
+    regex("\\bEBS\\b|Eastern Bering Sea|(^|[/_ -])EBS(?=[A-Za-z])", TRUE)
+  )
+}
+
+detect_ai_marker <- function(x) {
+  str_detect(
+    x %||% "",
+    regex("\\bAI\\b|Aleutian Is\\.?|Aleutian Islands|Bogoslof|(^|[/_ -])AI(?=[A-Za-z])|(^|[/_ -])BOG(?=[A-Za-z])", TRUE)
+  )
+}
+
+detect_statewide_marker <- function(x) {
+  str_detect(
+    x %||% "",
+    regex("BSAI/GOA|AK Sablefish|Alaska-wide|statewide", TRUE)
+  )
+}
+
 is_noaa_cover_page <- function(url) {
   str_detect(url %||% "", regex("/resource/(data|document)/", TRUE)) &
     !has_document_extension(url)
@@ -190,10 +225,16 @@ infer_stock <- function(label, filename = NA_character_) {
 
 infer_area <- function(label, filename = NA_character_, col_header = NA_character_) {
   hay <- paste(label %||% "", filename %||% "", col_header %||% "")
+  has_goa <- detect_goa_marker(hay)
+  has_bsai <- detect_bsai_marker(hay)
+  has_ebs <- detect_ebs_marker(hay)
+  has_ai <- detect_ai_marker(hay)
+  has_statewide <- detect_statewide_marker(hay)
+
   case_when(
-    str_detect(hay, regex("\\bBSAI\\b|Bering Sea and Aleutian Islands|Aleutian Islands", TRUE)) ~ "BSAI",
-    str_detect(hay, regex("\\bGOA\\b|Gulf of Alaska", TRUE)) ~ "GOA",
-    str_detect(hay, regex("BSAI/GOA|AK Sablefish|Alaska", TRUE)) ~ "BSAI/GOA",
+    has_statewide | (has_goa & (has_bsai | has_ebs | has_ai)) ~ "BSAI/GOA",
+    has_bsai | has_ebs | has_ai ~ "BSAI",
+    has_goa ~ "GOA",
     str_detect(hay, regex("Cook Inlet", TRUE)) ~ "Cook Inlet",
     TRUE ~ NA_character_
   )
@@ -912,22 +953,27 @@ derive_stock_fmp <- function(df) {
   df %>%
     mutate(
       fmp_hay = paste(label %||% "", filename %||% "", url %||% "", area %||% "", stock %||% ""),
+      has_goa = detect_goa_marker(fmp_hay),
+      has_bsai = detect_bsai_marker(fmp_hay),
+      has_ebs = detect_ebs_marker(fmp_hay),
+      has_ai = detect_ai_marker(fmp_hay),
+      has_statewide = detect_statewide_marker(fmp_hay),
       fmp = case_when(
-        str_detect(fmp_hay, regex("\\bGOA\\b|Gulf of Alaska", TRUE)) ~ "GOA",
-        str_detect(fmp_hay, regex("\\bAI\\b|Aleutian Islands|Bogoslof", TRUE)) ~ "BSAI",
-        str_detect(fmp_hay, regex("\\bEBS\\b|Eastern Bering Sea|Bering Sea and Aleutian Islands|\\bBSAI\\b", TRUE)) ~ "BSAI",
+        has_goa & !has_bsai & !has_ebs & !has_ai ~ "GOA",
+        has_ai | has_ebs | has_bsai ~ "BSAI",
+        has_statewide & stock %in% c("Sablefish", "Grenadier") ~ "GOA",
         stock %in% c("Sablefish", "Grenadier") ~ "GOA",
         area == "GOA" ~ "GOA",
         area == "BSAI" ~ "BSAI",
-        area == "BSAI/GOA" ~ "GOA",
+        area == "BSAI/GOA" & stock %in% c("Sablefish", "Grenadier") ~ "GOA",
         TRUE ~ NA_character_
       ),
       fmp_subarea = case_when(
-        fmp == "GOA" & stock == "Sablefish" ~ "Both",
-        fmp == "GOA" & stock == "Grenadier" ~ "Both",
+        fmp == "GOA" & (stock == "Sablefish" | stock == "Grenadier" | has_statewide) ~ "Both",
         fmp == "GOA" ~ "GOA",
-        fmp == "BSAI" & str_detect(fmp_hay, regex("\\bAI\\b|Aleutian Islands|Bogoslof", TRUE)) ~ "AI",
-        fmp == "BSAI" & str_detect(fmp_hay, regex("\\bEBS\\b|Eastern Bering Sea", TRUE)) ~ "EBS",
+        fmp == "BSAI" & (has_bsai | (has_ai & has_ebs)) ~ "Both",
+        fmp == "BSAI" & has_ai ~ "AI",
+        fmp == "BSAI" & has_ebs ~ "EBS",
         fmp == "BSAI" ~ "Both",
         TRUE ~ NA_character_
       ),
@@ -937,7 +983,7 @@ derive_stock_fmp <- function(df) {
         TRUE ~ stock
       )
     ) %>%
-    select(-fmp_hay)
+    select(-fmp_hay, -has_goa, -has_bsai, -has_ebs, -has_ai, -has_statewide)
 }
 
 integer_count_breaks <- function(x, n = 5) {
