@@ -1,0 +1,206 @@
+---
+title: "NPFMC SAFE catalog audit"
+format:
+  html:
+    toc: true
+    number-sections: true
+    lightbox: true
+    code-fold: true
+    code-summary: "Show R code"
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+source("npfmcSAFE.R")
+library(dplyr)
+library(gt)
+library(scales)
+```
+
+## Purpose
+
+This document builds a combined catalog from:
+
+- the NPFMC SAFE reports page
+- the NOAA Fisheries North Pacific groundfish assessment index
+- the linked NOAA annual groundfish pages
+
+It is designed to audit naming consistency, link structure, and year anomalies, with special attention to the unusual 2025 groundfish page.
+
+## Build catalog
+
+```{r}
+catalog_path <- file.path("outputs", "safe_catalog.csv")
+
+if (file.exists(catalog_path)) {
+  safe_catalog <- readr::read_csv(catalog_path, show_col_types = FALSE)
+} else {
+  safe_catalog <- build_safe_catalog(crawl_noaa = TRUE, quietly = TRUE)
+  write_safe_outputs(safe_catalog, out_dir = "outputs")
+}
+
+safe_summaries <- summarise_safe_catalog(safe_catalog)
+```
+
+## Headline counts
+
+These summary counts show the current size of the catalog, how many links were flagged as unusual, and how much temporal and stock coverage the combined crawl currently reaches.
+
+```{r}
+headline <- tibble::tibble(
+  metric = c(
+    "Total unique linked documents",
+    "Anomalous links flagged",
+    "Distinct stocks inferred",
+    "Distinct effective years inferred"
+  ),
+  value = c(
+    nrow(safe_catalog),
+    sum(safe_catalog$is_anomalous, na.rm = TRUE),
+    dplyr::n_distinct(stats::na.omit(safe_catalog$stock)),
+    dplyr::n_distinct(stats::na.omit(safe_catalog$true_year))
+  )
+)
+
+headline |>
+  gt() |>
+  fmt_number(columns = value, decimals = 0)
+```
+
+## Documents by year
+
+This plot gives the fastest read on whether the crawl is reaching the expected historical range and whether any NOAA entry-point changes created visible gaps in year coverage.
+
+```{r}
+plot_safe_docs_by_year(safe_catalog)
+```
+
+## Stock coverage
+
+This view shows which stocks appear repeatedly through time and which ones still have thin historical link coverage that may deserve a closer manual check.
+
+```{r}
+plot_stock_coverage(safe_catalog, n = 20)
+```
+
+## Anomalies
+
+The anomaly table focuses on links where the visible year, directory year, or reused filename pattern does not line up cleanly with the inferred effective year.
+
+```{r}
+safe_summaries$anomalies |>
+  select(source, section, label, filename, source_year_dir, true_year, anomaly_flags, url) |>
+  gt() |>
+  fmt_missing(everything(), missing_text = "") |>
+  tab_header(title = "Flagged anomalies")
+```
+
+## Filename collisions across effective years
+
+Repeated filenames across multiple effective years are worth tracking because they can hide silent document replacement or directory reuse.
+
+```{r}
+safe_summaries$filename_collisions |>
+  gt() |>
+  fmt_missing(everything(), missing_text = "")
+```
+
+## Stock inventory
+
+This inventory is a compact reference for what the crawler currently infers about stock, area, and section coverage across the combined catalog.
+
+```{r}
+safe_summaries$stock_inventory |>
+  arrange(section, stock, area) |>
+  gt() |>
+  fmt_number(columns = n, decimals = 0)
+```
+
+## Example: BSAI pollock access history
+
+Pollock is a useful regression test because the file naming has changed over time and the same stock can appear through multiple NOAA and NPFMC entry points.
+
+```{r}
+pollock_example <- safe_catalog |>
+  filter(
+    grepl("Pollock", stock %||% "") | grepl("pollock", label, ignore.case = TRUE),
+    grepl("BSAI|Bering", area %||% "", ignore.case = TRUE) |
+      grepl("BSAI", label, ignore.case = TRUE)
+  ) |>
+  mutate(
+    access_note = case_when(
+      filename == "BSAIpollock.pdf" ~ "Current naming uses BSAIpollock.pdf rather than EBSpollock.pdf",
+      filename == "EBSpollock.pdf" ~ "Alternate or older filename found",
+      TRUE ~ ""
+    )
+  ) |>
+  select(source, true_year, label, filename, access_note, url) |>
+  arrange(desc(true_year), source, label)
+
+pollock_example |>
+  gt() |>
+  fmt_missing(everything(), missing_text = "")
+```
+
+## Example: GOA Pacific cod access history
+
+GOA Pacific cod is a second targeted check because the current NPFMC page mixes ordinary 2025 material with visible 2026 update files under the 2025 directory.
+
+```{r}
+pcod_example <- safe_catalog |>
+  filter(
+    grepl("Pacific cod", stock %||% "", ignore.case = TRUE) |
+      grepl("pcod", filename %||% "", ignore.case = TRUE) |
+      grepl("Pacific cod", label, ignore.case = TRUE),
+    grepl("GOA", area %||% "", ignore.case = TRUE) |
+      grepl("GOA", label, ignore.case = TRUE)
+  ) |>
+  mutate(
+    access_note = case_when(
+      filename == "GOApcod.pdf" & grepl("\\b2026\\b", label) ~
+        "2026 GOA Pacific cod stored under /SAFE/2025/GOApcod.pdf",
+      filename == "GOApcod25.pdf" ~
+        "Explicit 2025 GOA Pacific cod filename",
+      TRUE ~ ""
+    )
+  ) |>
+  select(source, true_year, source_year_dir, label, filename, access_note, url) |>
+  arrange(desc(true_year), source, label)
+
+pcod_example |>
+  gt() |>
+  fmt_missing(everything(), missing_text = "")
+```
+
+## Resolved NOAA terminal links
+
+This long table lists terminal assessment links that point to the actual downloadable files rather than wrapper pages. It is the main place to confirm that NOAA `resource/data` cover pages and the REFM historic archive are being converted into live end-document URLs.
+
+```{r}
+resolved_noaa_links <- safe_catalog |>
+  filter(
+    source %in% c("NOAA", "NOAA_REFM"),
+    !grepl("fisheries.noaa.gov/resource/data", url, fixed = TRUE)
+  ) |>
+  arrange(desc(true_year), stock, label) |>
+  mutate(
+    live_link = sprintf("[open](%s)", url)
+  ) |>
+  select(source, true_year, stock, area, label, filename, live_link, url)
+
+resolved_noaa_links |>
+  gt() |>
+  fmt_missing(everything(), missing_text = "") |>
+  fmt_markdown(columns = live_link) |>
+  tab_header(title = "Resolved NOAA and REFM terminal assessment links")
+```
+
+## Notes
+
+- The 2025 NPFMC groundfish page explicitly says the GOA and BSAI groundfish SAFE reports were **not compiled** that year and that catch reports were prepared instead.
+- The same page also includes **2026 GOA Pacific cod** material inside the 2025 directory structure, which is why the anomaly checks treat visible link text as authoritative in that case.
+- NOAA’s groundfish index page acts as a second entry point by linking yearly pages for 2013–2024 plus a 1998–2012 historical archive page that is also crawled.
+- NOAA `resource/data` wrappers are dereferenced so the catalog keeps the underlying downloadable assessment files when those links are exposed on the wrapper page.
