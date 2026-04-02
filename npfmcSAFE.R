@@ -873,6 +873,20 @@ derive_stock_fmp <- function(df) {
     select(-fmp_hay)
 }
 
+integer_count_breaks <- function(x, n = 5) {
+  x <- sort(unique(stats::na.omit(as.integer(round(x)))))
+
+  if (!length(x)) {
+    return(NULL)
+  }
+
+  if (length(x) <= n) {
+    return(x)
+  }
+
+  unique(as.integer(round(seq(min(x), max(x), length.out = n))))
+}
+
 plot_stock_coverage <- function(df, n = 20, fmp_filter = NULL) {
   df_fmp <- derive_stock_fmp(df)
 
@@ -901,6 +915,12 @@ plot_stock_coverage <- function(df, n = 20, fmp_filter = NULL) {
         paste("Top", n, "stock-by-FMP groups, with GOA and BSAI sub-categories")
       },
       color = "Sub-area"
+    ) +
+    scale_size_area(
+      max_size = 8,
+      breaks = integer_count_breaks,
+      labels = function(x) as.integer(round(x)),
+      name = "Document count"
     ) +
     theme_minimal(base_size = 11)
 }
