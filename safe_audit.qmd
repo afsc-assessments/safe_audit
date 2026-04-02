@@ -30,7 +30,14 @@ This document builds a combined catalog from:
 
 It is designed to audit naming consistency, link structure, and year anomalies, with special attention to the unusual 2025 groundfish page.
 
-## Build catalog
+### Notes
+
+- The 2025 NPFMC groundfish page explicitly says the GOA and BSAI groundfish SAFE reports were **not compiled** that year and that catch reports were prepared instead.
+- The same page also includes **2026 GOA Pacific cod** material inside the 2025 directory structure, which is why the anomaly checks treat visible link text as authoritative in that case.
+- NOAA’s groundfish index page acts as a second entry point by linking yearly pages for 2013–2024, while REFM year pages are crawled directly for 2006–2012 and the REFM historic archive extends coverage farther back.
+- NOAA `resource/data` wrappers are dereferenced so the catalog keeps the underlying downloadable assessment files when those links are exposed on the wrapper page.
+
+### Build catalog
 
 ```{r}
 catalog_path <- file.path("outputs", "safe_catalog.csv")
@@ -88,6 +95,45 @@ plot_stock_coverage(safe_catalog, n = Inf, fmp_filter = "BSAI")
 
 ```{r}
 plot_stock_coverage(safe_catalog, n = Inf, fmp_filter = "GOA")
+```
+
+## Resolved NOAA terminal links
+
+This long table lists terminal assessment links that point to the actual downloadable files rather than wrapper pages. It is the main place to confirm that NOAA `resource/data` cover pages and the REFM historic archive are being converted into live end-document URLs.
+
+```{r}
+resolved_noaa_links <- safe_catalog |>
+  filter(
+    source %in% c("NOAA", "NOAA_REFM"),
+    !grepl("fisheries.noaa.gov/resource/data", url, fixed = TRUE)
+  ) |>
+  arrange(desc(true_year), filename, label) |>
+  mutate(
+    live_link = sprintf(
+      '<a href="%s" target="_blank" rel="noopener noreferrer">open</a>',
+      url
+    )
+  ) |>
+  select(source, true_year, filename, live_link, label, stock)
+
+DT::datatable(
+  resolved_noaa_links,
+  filter = "top",
+  escape = FALSE,
+  rownames = FALSE,
+  class = "compact stripe hover",
+  colnames = c("source", "true_year", "filename", "live_link", "label", "stock"),
+  options = list(
+    pageLength = 25,
+    autoWidth = TRUE,
+    order = list(list(1, "desc"), list(2, "asc"), list(4, "asc"))
+  ),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: 600;",
+    "Resolved NOAA and REFM terminal assessment links"
+  )
+) |>
+  DT::formatStyle(columns = names(resolved_noaa_links), `white-space` = "nowrap")
 ```
 
 ## Anomalies
@@ -198,49 +244,3 @@ pcod_example |>
   gt() |>
   fmt_missing(everything(), missing_text = "")
 ```
-
-## Resolved NOAA terminal links
-
-This long table lists terminal assessment links that point to the actual downloadable files rather than wrapper pages. It is the main place to confirm that NOAA `resource/data` cover pages and the REFM historic archive are being converted into live end-document URLs.
-
-```{r}
-resolved_noaa_links <- safe_catalog |>
-  filter(
-    source %in% c("NOAA", "NOAA_REFM"),
-    !grepl("fisheries.noaa.gov/resource/data", url, fixed = TRUE)
-  ) |>
-  arrange(desc(true_year), filename, label) |>
-  mutate(
-    live_link = sprintf(
-      '<a href="%s" target="_blank" rel="noopener noreferrer">open</a>',
-      url
-    )
-  ) |>
-  select(source, true_year, filename, live_link, label, stock)
-
-DT::datatable(
-  resolved_noaa_links,
-  filter = "top",
-  escape = FALSE,
-  rownames = FALSE,
-  class = "compact stripe hover",
-  colnames = c("source", "true_year", "filename", "live_link", "label", "stock"),
-  options = list(
-    pageLength = 25,
-    autoWidth = TRUE,
-    order = list(list(1, "desc"), list(2, "asc"), list(4, "asc"))
-  ),
-  caption = htmltools::tags$caption(
-    style = "caption-side: top; text-align: left; font-weight: 600;",
-    "Resolved NOAA and REFM terminal assessment links"
-  )
-) |>
-  DT::formatStyle(columns = names(resolved_noaa_links), `white-space` = "nowrap")
-```
-
-## Notes
-
-- The 2025 NPFMC groundfish page explicitly says the GOA and BSAI groundfish SAFE reports were **not compiled** that year and that catch reports were prepared instead.
-- The same page also includes **2026 GOA Pacific cod** material inside the 2025 directory structure, which is why the anomaly checks treat visible link text as authoritative in that case.
-- NOAA’s groundfish index page acts as a second entry point by linking yearly pages for 2013–2024, while REFM year pages are crawled directly for 2006–2012 and the REFM historic archive extends coverage farther back.
-- NOAA `resource/data` wrappers are dereferenced so the catalog keeps the underlying downloadable assessment files when those links are exposed on the wrapper page.
