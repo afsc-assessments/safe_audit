@@ -102,6 +102,8 @@ safe_summaries$anomalies |>
 
 Repeated filenames across multiple effective years are worth tracking because they can hide silent document replacement or directory reuse.
 
+For this audit, the effective year is based on the assessment folder or page context, not on any file timestamp. For example, `2003/EBSpollock.pdf` is treated as the 2003 assessment because of the folder name, regardless of the file's later modification date.
+
 ```{r}
 safe_summaries$filename_collisions |>
   gt() |>
