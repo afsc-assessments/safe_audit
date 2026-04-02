@@ -824,15 +824,19 @@ summarise_safe_catalog <- function(df) {
 plot_safe_docs_by_year <- function(df) {
   df %>%
     filter(!is.na(true_year)) %>%
-    count(source, true_year, name = "n_docs") %>%
-    ggplot(aes(true_year, n_docs)) +
-    geom_line() +
-    geom_point() +
+    mutate(plot_source = if_else(source == "NPFMC", "NPFMC", "NOAA")) %>%
+    count(plot_source, true_year, name = "n_docs") %>%
+    ggplot(aes(true_year, n_docs, color = plot_source, shape = plot_source)) +
+    geom_line(linewidth = 0.7) +
+    geom_point(size = 2.2) +
+    scale_color_manual(values = c("NOAA" = "#1b6ca8", "NPFMC" = "#c76b29")) +
     labs(
       x = "Effective year",
       y = "Document count",
       title = "SAFE-linked documents by effective year",
-      subtitle = "Combined NPFMC page + NOAA groundfish year pages"
+      subtitle = "NPFMC versus NOAA entry points, with REFM historic links grouped under NOAA",
+      color = "Source",
+      shape = "Source"
     ) +
     theme_minimal(base_size = 11)
 }
