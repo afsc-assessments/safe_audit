@@ -1,33 +1,35 @@
 section,stock_group,stock,area,n
-Groundfish SAFEs,groundfish,Pollock,NA,37
+Groundfish SAFEs,groundfish,Pollock,NA,61
+Groundfish SAFEs,groundfish,Skates,NA,28
+Groundfish SAFEs,groundfish,Arrowtooth flounder,NA,27
+Groundfish SAFEs,groundfish,Flathead sole,NA,27
+Groundfish SAFEs,groundfish,Northern rockfish,NA,27
+Groundfish SAFEs,groundfish,Octopus,NA,27
+Groundfish SAFEs,groundfish,Pacific cod,NA,27
+Groundfish SAFEs,groundfish,Pacific ocean perch,NA,27
+Groundfish SAFEs,groundfish,Sharks,NA,27
+Groundfish SAFEs,groundfish,Shortraker rockfish,NA,27
+Groundfish SAFEs,groundfish,Atka mackerel,NA,26
+Groundfish SAFEs,groundfish,Northern rock sole,NA,24
+Groundfish SAFEs,groundfish,Pollock,BSAI,24
+Groundfish SAFEs,groundfish,Sablefish,NA,24
+Groundfish SAFEs,groundfish,Rougheye/blackspotted complex,NA,23
+Groundfish SAFEs,groundfish,Other rockfish,NA,21
 Scallop SAFEs,scallop,Scallop,NA,21
-Groundfish SAFEs,groundfish,Pollock,BSAI,20
+Groundfish SAFEs,groundfish,Alaska plaice,BSAI/GOA,19
+Groundfish SAFEs,groundfish,Greenland turbot,NA,19
+Groundfish SAFEs,groundfish,Other flatfish,NA,19
 Groundfish SAFEs,groundfish,Pacific cod,BSAI,19
+Groundfish SAFEs,groundfish,Yellowfin sole,NA,19
+Groundfish SAFEs,groundfish,Demersal shelf rockfish,NA,18
 Groundfish SAFEs,groundfish,Sablefish,BSAI/GOA,18
-Groundfish SAFEs,groundfish,Northern rock sole,NA,16
-Groundfish SAFEs,groundfish,Skates,NA,14
-Groundfish SAFEs,groundfish,Arrowtooth flounder,NA,13
-Groundfish SAFEs,groundfish,Flathead sole,NA,13
-Groundfish SAFEs,groundfish,Northern rockfish,NA,13
-Groundfish SAFEs,groundfish,Octopus,NA,13
-Groundfish SAFEs,groundfish,Pacific cod,NA,13
-Groundfish SAFEs,groundfish,Pacific ocean perch,NA,13
-Groundfish SAFEs,groundfish,Rougheye/blackspotted complex,NA,13
-Groundfish SAFEs,groundfish,Sharks,NA,13
-Groundfish SAFEs,groundfish,Shortraker rockfish,NA,13
+Groundfish SAFEs,groundfish,Kamchatka flounder,NA,15
 Crab SAFEs,crab,Bristol Bay red king crab,NA,12
-Groundfish SAFEs,groundfish,Alaska plaice,BSAI/GOA,12
-Groundfish SAFEs,groundfish,Atka mackerel,NA,12
-Groundfish SAFEs,groundfish,Greenland turbot,NA,12
-Groundfish SAFEs,groundfish,Kamchatka flounder,NA,12
-Groundfish SAFEs,groundfish,Other flatfish,NA,12
-Groundfish SAFEs,groundfish,Other rockfish,NA,12
+Groundfish SAFEs,groundfish,Grenadier,NA,12
 Groundfish SAFEs,groundfish,Pollock,GOA,12
-Groundfish SAFEs,groundfish,Yellowfin sole,NA,12
 Groundfish SAFEs,groundfish,Arrowtooth flounder,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Atka mackerel,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Deep-water flatfish,BSAI/GOA,11
-Groundfish SAFEs,groundfish,Demersal shelf rockfish,NA,11
 Groundfish SAFEs,groundfish,Dusky rockfish,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Flathead sole,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Northern rockfish,BSAI/GOA,11
@@ -36,7 +38,6 @@ Groundfish SAFEs,groundfish,Pacific cod,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Pacific ocean perch,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Rex sole,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Rougheye/blackspotted complex,BSAI/GOA,11
-Groundfish SAFEs,groundfish,Sablefish,NA,11
 Groundfish SAFEs,groundfish,Shallow-water flatfish,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Sharks,BSAI/GOA,11
 Groundfish SAFEs,groundfish,Thornyheads,BSAI/GOA,11
@@ -44,9 +45,14 @@ Groundfish SAFEs,groundfish,Other rockfish,BSAI/GOA,10
 Groundfish SAFEs,groundfish,Pollock,BSAI/GOA,10
 Groundfish SAFEs,groundfish,Shortraker rockfish,BSAI/GOA,10
 Groundfish SAFEs,groundfish,Skates,BSAI/GOA,10
+Groundfish SAFEs,groundfish,Forage fish,NA,8
 Groundfish SAFEs,groundfish,Northern rock sole,BSAI/GOA,8
 Groundfish SAFEs,groundfish,Pacific cod,GOA,8
+Groundfish SAFEs,groundfish,Rex sole,NA,8
+Groundfish SAFEs,groundfish,Thornyheads,NA,8
+Groundfish SAFEs,groundfish,Deep-water flatfish,NA,7
 Groundfish SAFEs,groundfish,Greenland turbot,BSAI,7
+Groundfish SAFEs,groundfish,Shallow-water flatfish,NA,7
 Groundfish SAFEs,groundfish,Thornyheads,GOA,7
 Crab SAFEs,crab,Pribilof Islands blue king crab,NA,6
 Groundfish SAFEs,groundfish,Other rockfish,BSAI,6
@@ -59,6 +65,7 @@ Groundfish SAFEs,groundfish,Atka mackerel,BSAI,5
 Groundfish SAFEs,groundfish,Atka mackerel,GOA,5
 Groundfish SAFEs,groundfish,Flathead sole,BSAI,5
 Groundfish SAFEs,groundfish,Other flatfish,BSAI,5
+Groundfish SAFEs,other,Halibut discard mortality rates,NA,5
 2025 Groundfish SAFEs,groundfish,Pacific cod,GOA,4
 Crab SAFEs,crab,Pribilof Islands red king crab,NA,4
 Groundfish SAFEs,groundfish,Forage fish,BSAI/GOA,4
@@ -67,8 +74,8 @@ Cook Inlet Salmon SAFEs,salmon,Cook Inlet salmon,Cook Inlet,3
 Crab SAFEs,crab,Saint Matthew Island blue king crab,NA,3
 Groundfish SAFEs,groundfish,Alaska plaice,BSAI,3
 Groundfish SAFEs,groundfish,Demersal shelf rockfish,GOA,3
+Groundfish SAFEs,groundfish,Dusky rockfish,NA,3
 Groundfish SAFEs,groundfish,Flathead sole,GOA,3
-Groundfish SAFEs,groundfish,Forage fish,NA,3
 Groundfish SAFEs,groundfish,Grenadier,BSAI/GOA,3
 Groundfish SAFEs,groundfish,Northern rockfish,BSAI,3
 Groundfish SAFEs,groundfish,Pacific ocean perch,GOA,3
@@ -79,7 +86,6 @@ Crab SAFEs,crab,Eastern Bering Sea snow crab,NA,2
 Crab SAFEs,crab,Pribilof Islands golden king crab,NA,2
 Groundfish SAFEs,groundfish,Rex sole,GOA,2
 Groundfish SAFEs,groundfish,Sharks,BSAI,2
-Groundfish SAFEs,other,Halibut discard mortality rates,NA,2
 2025 Groundfish SAFEs,groundfish,Alaska plaice,BSAI,1
 2025 Groundfish SAFEs,groundfish,Arrowtooth flounder,BSAI,1
 2025 Groundfish SAFEs,groundfish,Arrowtooth flounder,GOA,1
@@ -124,12 +130,7 @@ Crab SAFEs,crab,Aleutian Islands golden king crab,BSAI,1
 Crab SAFEs,crab,Tanner crab,NA,1
 Crab SAFEs,crab,West Aleutian Islands red king crab,BSAI,1
 Crab SAFEs,crab,West Aleutian Islands red king crab,NA,1
-Groundfish SAFEs,groundfish,Deep-water flatfish,NA,1
 Groundfish SAFEs,groundfish,Demersal shelf rockfish,BSAI/GOA,1
 Groundfish SAFEs,groundfish,Dusky rockfish,GOA,1
-Groundfish SAFEs,groundfish,Dusky rockfish,NA,1
 Groundfish SAFEs,groundfish,Forage fish,GOA,1
-Groundfish SAFEs,groundfish,Rex sole,NA,1
-Groundfish SAFEs,groundfish,Shallow-water flatfish,NA,1
-Groundfish SAFEs,groundfish,Thornyheads,NA,1
 Groundfish SAFEs,other,Halibut discard mortality rates,GOA,1

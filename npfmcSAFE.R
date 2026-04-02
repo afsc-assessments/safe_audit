@@ -25,6 +25,7 @@ suppressPackageStartupMessages({
 NPFMC_SAFE_URL <- "https://www.npfmc.org/library/safe-reports/"
 NOAA_GROUNDFISH_INDEX_URL <- "https://www.fisheries.noaa.gov/alaska/population-assessments/north-pacific-groundfish-stock-assessments-and-fishery-evaluation"
 REFM_HISTORIC_URL <- "https://apps-afsc.fisheries.noaa.gov/REFM/stocks/Historic_Assess.htm"
+REFM_YEAR_PAGE_TEMPLATE <- "https://apps-afsc.fisheries.noaa.gov/REFM/stocks/%d_assessments.htm"
 
 `%||%` <- function(x, y) {
   if (is.null(x) || length(x) == 0 || all(is.na(x)) || identical(x, "")) y else x
@@ -509,6 +510,71 @@ scrape_refm_historic_archive <- function(url = REFM_HISTORIC_URL) {
     arrange(desc(true_year), label)
 }
 
+classify_refm_year_link <- function(node, page_url, year) {
+  label <- clean_text(xml_text(node, trim = TRUE))
+  href <- safe_get_attr(node, "href")
+  url <- url_absolute(href %||% "", page_url)
+  filename <- extract_filename(url)
+  stock_info <- infer_stock(label, filename)
+  area <- infer_area(label, filename, label)
+  product_type <- infer_product_type(label, filename, url)
+
+  tibble(
+    source = "NOAA_REFM",
+    section = "Groundfish SAFEs",
+    page_url = page_url,
+    parent_page = page_url,
+    label = label,
+    url = url,
+    filename = filename,
+    source_year_dir = coalesce(extract_path_year(url), extract_dir_year(url)),
+    true_year = year,
+    area = area,
+    stock_group = coalesce(stock_info$stock_group, "groundfish"),
+    stock = stock_info$stock,
+    product_type = product_type,
+    document_role = infer_role("Groundfish SAFEs", extract_dir_year(url), label, product_type),
+    col_header = NA_character_,
+    row_text = NA_character_,
+    is_anomalous = FALSE,
+    anomaly_flags = "",
+    link_type = case_when(
+      is.na(url) | url == "" ~ "other",
+      is_same_page_anchor(url, page_url) ~ "other",
+      has_document_extension(url) ~ "document",
+      TRUE ~ "other"
+    )
+  )
+}
+
+scrape_refm_year_page <- function(year,
+                                  page_url = sprintf(REFM_YEAR_PAGE_TEMPLATE, year)) {
+  read_html(page_url) %>%
+    html_elements("a") %>%
+    map_dfr(classify_refm_year_link, page_url = page_url, year = year) %>%
+    filter(
+      link_type == "document",
+      str_detect(url, regex(sprintf("/docs/%d/|/Docs/%d/", year, year), TRUE))
+    ) %>%
+    select(-link_type) %>%
+    distinct(url, label, .keep_all = TRUE) %>%
+    arrange(label)
+}
+
+crawl_refm_year_pages <- function(years = 2006:2012, quietly = FALSE) {
+  map_dfr(years, function(y) {
+    page_url <- sprintf(REFM_YEAR_PAGE_TEMPLATE, y)
+    if (!quietly) message("Crawling REFM year page: ", y)
+    tryCatch(
+      scrape_refm_year_page(y, page_url = page_url),
+      error = function(e) {
+        warning("Failed on REFM year page ", y, ": ", conditionMessage(e), call. = FALSE)
+        tibble()
+      }
+    )
+  })
+}
+
 classify_noaa_page_link <- function(node, page_url, year = NA_integer_, parent_page = NOAA_GROUNDFISH_INDEX_URL) {
   label <- clean_text(xml_text(node, trim = TRUE))
   href <- safe_get_attr(node, "href")
@@ -776,6 +842,7 @@ build_safe_catalog <- function(crawl_noaa = TRUE,
 
   noaa_index <- scrape_noaa_groundfish_index()
   noaa <- crawl_noaa_groundfish_years(index = noaa_index, years = noaa_years, quietly = quietly)
+  refm_year_pages <- crawl_refm_year_pages(quietly = quietly)
   refm <- tryCatch(
     scrape_refm_historic_archive(),
     error = function(e) {
@@ -784,7 +851,7 @@ build_safe_catalog <- function(crawl_noaa = TRUE,
     }
   )
 
-  bind_rows(npfmc, noaa, refm) %>%
+  bind_rows(npfmc, noaa, refm_year_pages, refm) %>%
     mutate(
       stock_group = coalesce(stock_group, case_when(
         section == "Groundfish SAFEs" ~ "groundfish",

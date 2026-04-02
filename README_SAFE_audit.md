@@ -9,6 +9,7 @@ Files included:
 The NOAA path now crawls both:
 
 - annual NOAA groundfish pages for 2013 onward
+- REFM annual assessment pages for 2006-2012
 - the NOAA `1998–2012` historical archive page, including any older year pages or direct document links it exposes
 - NOAA `resource/data` cover pages are resolved to their underlying downloadable files when possible, so the catalog prefers terminal PDFs over wrapper pages
 
