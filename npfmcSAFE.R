@@ -952,12 +952,12 @@ plot_safe_docs_by_year <- function(df) {
 derive_stock_fmp <- function(df) {
   df %>%
     mutate(
-      fmp_hay = paste(label %||% "", filename %||% "", url %||% "", area %||% "", stock %||% ""),
-      has_goa = detect_goa_marker(fmp_hay),
-      has_bsai = detect_bsai_marker(fmp_hay),
-      has_ebs = detect_ebs_marker(fmp_hay),
-      has_ai = detect_ai_marker(fmp_hay),
-      has_statewide = detect_statewide_marker(fmp_hay),
+      fmp_marker_hay = paste(label %||% "", filename %||% "", url %||% "", stock %||% ""),
+      has_goa = detect_goa_marker(fmp_marker_hay),
+      has_bsai = detect_bsai_marker(fmp_marker_hay),
+      has_ebs = detect_ebs_marker(fmp_marker_hay),
+      has_ai = detect_ai_marker(fmp_marker_hay),
+      has_statewide = detect_statewide_marker(fmp_marker_hay),
       fmp = case_when(
         has_goa & !has_bsai & !has_ebs & !has_ai ~ "GOA",
         has_ai | has_ebs | has_bsai ~ "BSAI",
@@ -983,7 +983,7 @@ derive_stock_fmp <- function(df) {
         TRUE ~ stock
       )
     ) %>%
-    select(-fmp_hay, -has_goa, -has_bsai, -has_ebs, -has_ai, -has_statewide)
+    select(-fmp_marker_hay, -has_goa, -has_bsai, -has_ebs, -has_ai, -has_statewide)
 }
 
 integer_count_breaks <- function(x, n = 5) {
@@ -1016,8 +1016,8 @@ plot_stock_coverage <- function(df, n = 20, fmp_filter = NULL) {
     semi_join(top_stocks, by = "stock_fmp_label") %>%
     filter(!is.na(true_year), !is.na(stock), !is.na(fmp), !is.na(fmp_subarea)) %>%
     count(fmp, fmp_subarea, stock_fmp_label, true_year, name = "n_docs") %>%
-    ggplot(aes(true_year, reorder(stock_fmp_label, true_year), size = n_docs, color = fmp_subarea)) +
-    geom_point(alpha = 0.85) +
+    ggplot(aes(true_year, reorder(stock_fmp_label, true_year), color = fmp_subarea)) +
+    geom_point(size = 5, alpha = 0.85) +
     labs(
       x = "Effective year",
       y = NULL,
@@ -1028,12 +1028,6 @@ plot_stock_coverage <- function(df, n = 20, fmp_filter = NULL) {
         paste("Top", n, "stock-by-FMP groups, with GOA and BSAI sub-categories")
       },
       color = "Sub-area"
-    ) +
-    scale_size_area(
-      max_size = 8,
-      breaks = integer_count_breaks,
-      labels = function(x) as.integer(round(x)),
-      name = "Document count"
     ) +
     theme_minimal(base_size = 11)
 }
