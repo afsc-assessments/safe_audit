@@ -205,11 +205,11 @@ resolved_noaa_links <- safe_catalog |>
     source %in% c("NOAA", "NOAA_REFM"),
     !grepl("fisheries.noaa.gov/resource/data", url, fixed = TRUE)
   ) |>
-  arrange(desc(true_year), stock, label) |>
+  arrange(desc(true_year), filename, label) |>
   mutate(
     live_link = sprintf("[open](%s)", url)
   ) |>
-  select(source, true_year, stock, area, label, filename, live_link, url)
+  select(source, true_year, filename, live_link, label, stock)
 
 resolved_noaa_links |>
   gt() |>
