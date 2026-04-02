@@ -873,8 +873,12 @@ derive_stock_fmp <- function(df) {
     select(-fmp_hay)
 }
 
-plot_stock_coverage <- function(df, n = 20) {
+plot_stock_coverage <- function(df, n = 20, fmp_filter = NULL) {
   df_fmp <- derive_stock_fmp(df)
+
+  if (!is.null(fmp_filter)) {
+    df_fmp <- df_fmp %>% filter(fmp == fmp_filter)
+  }
 
   top_stocks <- df_fmp %>%
     filter(!is.na(stock)) %>%
@@ -887,12 +891,15 @@ plot_stock_coverage <- function(df, n = 20) {
     count(fmp, fmp_subarea, stock_fmp_label, true_year, name = "n_docs") %>%
     ggplot(aes(true_year, reorder(stock_fmp_label, true_year), size = n_docs, color = fmp_subarea)) +
     geom_point(alpha = 0.85) +
-    facet_grid(fmp ~ ., scales = "free_y", space = "free_y") +
     labs(
       x = "Effective year",
       y = NULL,
-      title = "Coverage by stock and year",
-      subtitle = paste("Top", n, "stock-by-FMP groups, with GOA and BSAI sub-categories"),
+      title = paste("Coverage by stock and year", if (!is.null(fmp_filter)) paste("-", fmp_filter) else ""),
+      subtitle = if (!is.null(fmp_filter)) {
+        paste("All stock groups within", fmp_filter, "with sub-area categories")
+      } else {
+        paste("Top", n, "stock-by-FMP groups, with GOA and BSAI sub-categories")
+      },
       color = "Sub-area"
     ) +
     theme_minimal(base_size = 11)
