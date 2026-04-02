@@ -83,7 +83,7 @@ plot_safe_docs_by_year(safe_catalog)
 This view groups stocks by FMP first, then by the most relevant sub-area within that FMP. GOA entries are separated into `GOA` versus `Both` where needed, while BSAI entries are separated into `EBS`, `AI`, or `Both`.
 
 ```{r}
-plot_stock_coverage(safe_catalog, n = 20)
+plot_stock_coverage(safe_catalog, n = Inf)
 ```
 
 ## Anomalies
