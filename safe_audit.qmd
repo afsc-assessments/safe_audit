@@ -207,15 +207,31 @@ resolved_noaa_links <- safe_catalog |>
   ) |>
   arrange(desc(true_year), filename, label) |>
   mutate(
-    live_link = sprintf("[open](%s)", url)
+    live_link = sprintf(
+      '<a href="%s" target="_blank" rel="noopener noreferrer">open</a>',
+      url
+    )
   ) |>
   select(source, true_year, filename, live_link, label, stock)
 
-resolved_noaa_links |>
-  gt() |>
-  fmt_missing(everything(), missing_text = "") |>
-  fmt_markdown(columns = live_link) |>
-  tab_header(title = "Resolved NOAA and REFM terminal assessment links")
+DT::datatable(
+  resolved_noaa_links,
+  filter = "top",
+  escape = FALSE,
+  rownames = FALSE,
+  class = "compact stripe hover",
+  colnames = c("source", "true_year", "filename", "live_link", "label", "stock"),
+  options = list(
+    pageLength = 25,
+    autoWidth = TRUE,
+    order = list(list(1, "desc"), list(2, "asc"), list(4, "asc"))
+  ),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: 600;",
+    "Resolved NOAA and REFM terminal assessment links"
+  )
+) |>
+  DT::formatStyle(columns = names(resolved_noaa_links), `white-space` = "nowrap")
 ```
 
 ## Notes
