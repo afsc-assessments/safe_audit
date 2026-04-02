@@ -104,9 +104,39 @@ Repeated filenames across multiple effective years are worth tracking because th
 
 For this audit, the effective year is based on the assessment folder or page context, not on any file timestamp. For example, `2003/EBSpollock.pdf` is treated as the 2003 assessment because of the folder name, regardless of the file's later modification date.
 
+The summary table below is meant to be read one filename at a time. Each row says that the same basename appears in multiple assessment years, shows the total number of distinct years, and lists those years explicitly. For example, if `AIpcod.pdf` has `8` years listed, that means the same filename was reused in eight separate assessment-year contexts.
+
+```{r}
+filename_collision_summary <- safe_summaries$filename_collisions |>
+  group_by(source, filename, n_true_years) |>
+  summarise(
+    first_year = min(true_year, na.rm = TRUE),
+    last_year = max(true_year, na.rm = TRUE),
+    years = paste(sort(unique(true_year)), collapse = ", "),
+    .groups = "drop"
+  ) |>
+  arrange(source, filename)
+
+filename_collision_summary |>
+  gt() |>
+  cols_label(
+    n_true_years = "distinct_years",
+    first_year = "first_year",
+    last_year = "last_year",
+    years = "year_list"
+  ) |>
+  fmt_missing(everything(), missing_text = "")
+```
+
+If you need the row-level detail, the table below expands the same collisions back out to one row per filename-year combination.
+
 ```{r}
 safe_summaries$filename_collisions |>
+  arrange(source, filename, true_year) |>
   gt() |>
+  cols_label(
+    n_true_years = "distinct_years"
+  ) |>
   fmt_missing(everything(), missing_text = "")
 ```
 
