@@ -128,18 +128,6 @@ filename_collision_summary |>
   fmt_missing(everything(), missing_text = "")
 ```
 
-If you need the row-level detail, the table below expands the same collisions back out to one row per filename-year combination.
-
-```{r}
-safe_summaries$filename_collisions |>
-  arrange(source, filename, true_year) |>
-  gt() |>
-  cols_label(
-    n_true_years = "distinct_years"
-  ) |>
-  fmt_missing(everything(), missing_text = "")
-```
-
 ## Stock inventory
 
 This inventory is a compact reference for what the crawler currently infers about stock, area, and section coverage across the combined catalog.
