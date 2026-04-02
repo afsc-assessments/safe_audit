@@ -80,7 +80,7 @@ plot_safe_docs_by_year(safe_catalog)
 
 ## Stock coverage
 
-This view shows which stocks appear repeatedly through time and which ones still have thin historical link coverage that may deserve a closer manual check.
+This view groups stocks by FMP first, then by the most relevant sub-area within that FMP. GOA entries are separated into `GOA` versus `Both` where needed, while BSAI entries are separated into `EBS`, `AI`, or `Both`.
 
 ```{r}
 plot_stock_coverage(safe_catalog, n = 20)

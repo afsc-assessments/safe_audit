@@ -841,23 +841,59 @@ plot_safe_docs_by_year <- function(df) {
     theme_minimal(base_size = 11)
 }
 
+derive_stock_fmp <- function(df) {
+  df %>%
+    mutate(
+      fmp_hay = paste(label %||% "", filename %||% "", url %||% "", area %||% "", stock %||% ""),
+      fmp = case_when(
+        str_detect(fmp_hay, regex("\\bGOA\\b|Gulf of Alaska", TRUE)) ~ "GOA",
+        str_detect(fmp_hay, regex("\\bAI\\b|Aleutian Islands|Bogoslof", TRUE)) ~ "BSAI",
+        str_detect(fmp_hay, regex("\\bEBS\\b|Eastern Bering Sea|Bering Sea and Aleutian Islands|\\bBSAI\\b", TRUE)) ~ "BSAI",
+        stock %in% c("Sablefish", "Grenadier") ~ "GOA",
+        area == "GOA" ~ "GOA",
+        area == "BSAI" ~ "BSAI",
+        area == "BSAI/GOA" ~ "GOA",
+        TRUE ~ NA_character_
+      ),
+      fmp_subarea = case_when(
+        fmp == "GOA" & stock == "Sablefish" ~ "Both",
+        fmp == "GOA" & stock == "Grenadier" ~ "Both",
+        fmp == "GOA" ~ "GOA",
+        fmp == "BSAI" & str_detect(fmp_hay, regex("\\bAI\\b|Aleutian Islands|Bogoslof", TRUE)) ~ "AI",
+        fmp == "BSAI" & str_detect(fmp_hay, regex("\\bEBS\\b|Eastern Bering Sea", TRUE)) ~ "EBS",
+        fmp == "BSAI" ~ "Both",
+        TRUE ~ NA_character_
+      ),
+      stock_fmp_label = case_when(
+        !is.na(fmp) & !is.na(fmp_subarea) ~ paste0(stock, " (", fmp, ": ", fmp_subarea, ")"),
+        !is.na(fmp) ~ paste0(stock, " (", fmp, ")"),
+        TRUE ~ stock
+      )
+    ) %>%
+    select(-fmp_hay)
+}
+
 plot_stock_coverage <- function(df, n = 20) {
-  top_stocks <- df %>%
+  df_fmp <- derive_stock_fmp(df)
+
+  top_stocks <- df_fmp %>%
     filter(!is.na(stock)) %>%
-    count(stock, sort = TRUE) %>%
+    count(stock_fmp_label, sort = TRUE) %>%
     slice_head(n = n)
 
-  df %>%
-    semi_join(top_stocks, by = "stock") %>%
-    filter(!is.na(true_year), !is.na(stock)) %>%
-    count(stock, true_year, name = "n_docs") %>%
-    ggplot(aes(true_year, stock, size = n_docs)) +
-    geom_point(alpha = 0.8) +
+  df_fmp %>%
+    semi_join(top_stocks, by = "stock_fmp_label") %>%
+    filter(!is.na(true_year), !is.na(stock), !is.na(fmp), !is.na(fmp_subarea)) %>%
+    count(fmp, fmp_subarea, stock_fmp_label, true_year, name = "n_docs") %>%
+    ggplot(aes(true_year, reorder(stock_fmp_label, true_year), size = n_docs, color = fmp_subarea)) +
+    geom_point(alpha = 0.85) +
+    facet_grid(fmp ~ ., scales = "free_y", space = "free_y") +
     labs(
       x = "Effective year",
       y = NULL,
       title = "Coverage by stock and year",
-      subtitle = paste("Top", n, "stocks by linked-document frequency")
+      subtitle = paste("Top", n, "stock-by-FMP groups, with GOA and BSAI sub-categories"),
+      color = "Sub-area"
     ) +
     theme_minimal(base_size = 11)
 }
