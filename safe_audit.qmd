@@ -189,6 +189,13 @@ safe_summaries$stock_inventory |>
   fmt_number(columns = n, decimals = 0)
 ```
 
+## Full SAFE reports and inventory links
+
+For full SAFE reports that cover the stocks included in this audit, use the NOAA SAFE library and the companion inventory sheet:
+
+- [NOAA AFSC NMML SAFE document library](https://library.oarcloud.noaa.gov/#/noaa_documents.lib/NMFS/AFSC/NMML/SAFE_docs/)
+- [SAFE stock inventory document (Google Sheets)](https://docs.google.com/spreadsheets/d/1auqoBRbpl1DCyZ-5DsDZMt9n2J7l11g7zoW7yjirWQM/edit?gid=0#gid=0)
+
 ## Example: BSAI pollock access history
 
 Pollock is a useful regression test because the file naming has changed over time and the same stock can appear through multiple NOAA and NPFMC entry points.
@@ -243,4 +250,75 @@ pcod_example <- safe_catalog |>
 pcod_example |>
   gt() |>
   fmt_missing(everything(), missing_text = "")
+```
+
+## Recent HCR mentions (top 30)
+
+The section below summarizes the 30 most recent `HCR` mentions from the NPFMC meetings document search output and provides direct links to both the document and its meeting page.
+
+```{r}
+hcr_path <- "npfmc_hcr_mentions_top30.csv"
+
+if (!file.exists(hcr_path)) {
+  cat(
+    "The file `npfmc_hcr_mentions_top30.csv` was not found. ",
+    "Run the HCR extraction step first, then re-render this report."
+  )
+} else {
+  hcr_top30 <- readr::read_csv(hcr_path, show_col_types = FALSE) |>
+    mutate(
+      meeting_time = as.POSIXct(meeting_time, tz = "UTC"),
+      meeting_date = as.Date(meeting_time)
+    ) |>
+    arrange(desc(meeting_time))
+
+  hcr_summary <- hcr_top30 |>
+    summarise(
+      n_mentions = n(),
+      n_meetings = dplyr::n_distinct(meeting_url),
+      newest = max(meeting_date, na.rm = TRUE),
+      oldest = min(meeting_date, na.rm = TRUE),
+      hcr_named_docs = sum(
+        grepl("\\\\bHCR\\\\b|Harvest Control Rule", document_title, ignore.case = TRUE),
+        na.rm = TRUE
+      )
+    )
+
+  cat(sprintf(
+    paste0(
+      "These %d entries span **%s** through **%s**, covering **%d** meetings. ",
+      "**%d** document titles explicitly include `HCR` or `Harvest Control Rule`."
+    ),
+    hcr_summary$n_mentions,
+    format(hcr_summary$oldest, "%B %d, %Y"),
+    format(hcr_summary$newest, "%B %d, %Y"),
+    hcr_summary$n_meetings,
+    hcr_summary$hcr_named_docs
+  ))
+
+  hcr_display <- hcr_top30 |>
+    mutate(
+      meeting_link = sprintf(
+        '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+        meeting_url,
+        meeting
+      ),
+      document_link = sprintf(
+        '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+        document_url,
+        document_title
+      )
+    ) |>
+    select(meeting_date, meeting_link, document_link)
+
+  hcr_display |>
+    gt() |>
+    fmt_date(columns = meeting_date, date_style = 6) |>
+    fmt_markdown(columns = c(meeting_link, document_link)) |>
+    cols_label(
+      meeting_date = "Meeting Date",
+      meeting_link = "Meeting",
+      document_link = "Document"
+    )
+}
 ```
