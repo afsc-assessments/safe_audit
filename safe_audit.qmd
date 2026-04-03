@@ -25,6 +25,7 @@ library(scales)
 This document builds a combined catalog from:
 
 - the NPFMC SAFE reports page
+- the NOAA Fisheries North Pacific groundfish historical archive page (1998–2012)
 - the NOAA Fisheries North Pacific groundfish assessment index
 - the linked NOAA annual groundfish pages
 
@@ -34,7 +35,7 @@ It is designed to audit naming consistency, link structure, and year anomalies, 
 
 - The 2025 NPFMC groundfish page explicitly says the GOA and BSAI groundfish SAFE reports were **not compiled** that year and that catch reports were prepared instead.
 - The same page also includes **2026 GOA Pacific cod** material inside the 2025 directory structure, which is why the anomaly checks treat visible link text as authoritative in that case.
-- NOAA’s groundfish index page acts as a second entry point by linking yearly pages for 2013–2024, while REFM year pages are crawled directly for 2006–2012 and the REFM historic archive extends coverage farther back.
+- NOAA’s historical archive page (1998–2012) is treated as the second entry point, while the groundfish index links yearly pages for 2013–2024; REFM year pages are crawled directly for 2006–2012 and the REFM historic archive extends coverage farther back.
 - NOAA `resource/data` wrappers are dereferenced so the catalog keeps the underlying downloadable assessment files when those links are exposed on the wrapper page.
 
 ### Build catalog
